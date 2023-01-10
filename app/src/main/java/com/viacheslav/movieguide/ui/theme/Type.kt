@@ -1,6 +1,5 @@
 package com.viacheslav.movieguide.ui.theme
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -29,7 +28,7 @@ val Typography = Typography(
         fontSize = 40.sp,
         lineHeight = 40.sp,
     ),
-      titleMedium = TextStyle(
+    titleMedium = TextStyle(
         fontFamily = fontFamilyRoboto,
         fontWeight = FontWeight.Black,
         fontSize = 14.sp,
@@ -59,6 +58,12 @@ val Typography = Typography(
         fontWeight = FontWeight.Light,
         fontSize = 12.sp,
         lineHeight = 16.sp,
+    ),
+    labelSmall = TextStyle(
+        fontFamily = fontFamilyRoboto,
+        fontWeight = FontWeight.Light,
+        fontSize = 8.sp,
+        lineHeight = 12.sp,
     )
     /* Other default text styles to override
     titleLarge = TextStyle(
