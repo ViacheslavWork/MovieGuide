@@ -40,7 +40,6 @@ import java.util.*
  * Created by Viacheslav Avd on 09.01.2023
  */
 
-const val ARG_MOVIE_ID = "ARG_MOVIE_ID"
 
 private val testCastList = listOf(
     R.drawable.im_downey to R.string.downey,

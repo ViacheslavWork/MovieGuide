@@ -2,7 +2,7 @@ package com.viacheslav.movieguide.data.dto
 
 import com.google.gson.annotations.SerializedName
 
-data class ListResponse<T>(
+data class ResponseList<T>(
     @field:SerializedName("page")
     val page: Int,
 

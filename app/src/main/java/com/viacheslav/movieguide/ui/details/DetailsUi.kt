@@ -1,8 +1,9 @@
 package com.viacheslav.movieguide.ui.details
 
-import com.viacheslav.movieguide.data.dto.CastItem
+import com.viacheslav.movieguide.data.dto.CastItemDto
 import com.viacheslav.movieguide.data.dto.MovieDetailsDto
 import com.viacheslav.movieguide.data.retrofit.IMAGE_URL
+import com.viacheslav.movieguide.toLine
 import kotlin.math.roundToInt
 
 /**
@@ -20,30 +21,24 @@ data class DetailsUi(
     val posterPath: String
 ) {
     companion object {
-        fun fromDto(dto: MovieDetailsDto) =
+        fun fromDto(movieDetailsDto: MovieDetailsDto, castDto: List<CastItemDto>) =
             DetailsUi(
-                id = dto.id,
-                ageLimit = if (dto.adult) 18 else 13,
-                title = dto.title,
-                genres = dto.genres.let {
-                    val strBuilder = StringBuilder()
-                    it.forEachIndexed { index, genre ->
-                        strBuilder.append(genre.name)
-                        if (index != it.size - 1) strBuilder.append(", ")
-                    }
-                    strBuilder.toString()
-                },
-                numberOfStars = (dto.voteAverage / 2).roundToInt(),
-                numberOfReviews = dto.voteCount,
-                posterPath = IMAGE_URL.plus(dto.backdropPath),
-                storyLine = dto.overview ?: "",
+                id = movieDetailsDto.id,
+                ageLimit = if (movieDetailsDto.adult) 18 else 13,
+                title = movieDetailsDto.title,
+                genres = movieDetailsDto.genres.map { it.name }.toLine(),
+                numberOfStars = (movieDetailsDto.voteAverage / 2).roundToInt(),
+                numberOfReviews = movieDetailsDto.voteCount,
+                cast = castDto.map { ActorUi.fromCastItemDto(it) },
+                posterPath = IMAGE_URL.plus(movieDetailsDto.backdropPath),
+                storyLine = movieDetailsDto.overview ?: "",
             )
     }
 }
 
 data class ActorUi(val name: String, val photoPath: String) {
     companion object {
-        fun fromCastItemDto(dto: CastItem) = ActorUi(
+        fun fromCastItemDto(dto: CastItemDto) = ActorUi(
             name = dto.name,
             photoPath = IMAGE_URL.plus(dto.profilePath)
         )

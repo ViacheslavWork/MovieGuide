@@ -1,8 +1,8 @@
 package com.viacheslav.movieguide.ui.movies_list
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.viacheslav.movieguide.data.MoviesRepositoryImpl
 import com.viacheslav.movieguide.data.retrofit.moviesGuideApiService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,15 +35,18 @@ fun getTestMovies(): List<MovieItemUi> {
 
 class MoviesListViewModel : ViewModel() {
 
+    private val repository = MoviesRepositoryImpl(moviesGuideApiService)
+
     private val _movies = MutableStateFlow<List<MovieItemUi>>(emptyList())
     val movies: StateFlow<List<MovieItemUi>> = _movies.asStateFlow()
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
+            val allGenres = repository.getGenres()
             _movies.update {
-                moviesGuideApiService.getPopularMovies().results.map { MovieItemUi.fromMovieDto(it) }
+                repository.getPopularMovies()
+                    .map { moviesDto -> MovieItemUi.fromMovieDto(moviesDto, allGenres) }
             }
-            Log.d("TAG", "MovieListScreen: ${moviesGuideApiService.getPopularMovies()}")
         }
     }
 }
