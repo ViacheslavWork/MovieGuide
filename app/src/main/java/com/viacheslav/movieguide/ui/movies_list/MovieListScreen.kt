@@ -1,5 +1,6 @@
 package com.viacheslav.movieguide.ui.movies_list
 
+import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
@@ -10,6 +11,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,6 +27,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.viacheslav.movieguide.R
 import com.viacheslav.movieguide.ui.theme.MovieGuideTheme
 import java.util.*
@@ -32,83 +37,58 @@ import java.util.*
  * Created by Viacheslav Avd on 09.01.2023
  */
 
-fun getTestMovies(): List<MovieItemUi> {
-    val movies = mutableListOf<MovieItemUi>()
-    repeat(6) {
-        movies.add(
-            MovieItemUi(
-                id = 1,
-                title = "Avengers: End Game",
-                ageLimit = 13,
-                genres = "Action, Adventure, Drama, Action, Adventure, Drama",
-                numberOfStars = 4,
-                numberOfReviews = 125,
-                duration = 137,
-                isLiked = it % 2 == 0,
-                poster = R.drawable.im_avengers_end_game
-            )
-        )
-    }
-    return movies
-}
-
 @Composable
-fun MovieListScreen() {
+fun MovieListScreen(onMovieClick: (id: Int) -> Unit = {}) {
+    val viewModel: MoviesListViewModel = viewModel()
+    val movies by viewModel.movies.collectAsState()
     MovieGuideTheme {
         // A surface container using the 'background' color from the theme
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(14.dp)
+                .padding(horizontal = 14.dp)
         ) {
             Spacer(modifier = Modifier.height(44.dp))
             HeaderBlock()
             Spacer(modifier = Modifier.height(24.dp))
-            ListBlock(getTestMovies())
-            Spacer(modifier = Modifier.height(16.dp))
+            ListBlock(movies = movies, onMovieClick)
         }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ListBlock(testMovies: List<MovieItemUi>) {
+fun ListBlock(movies: List<MovieItemUi>, onMovieClick: (id: Int) -> Unit) {
     LazyVerticalGrid(
         cells = GridCells.Fixed(2),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(bottom = 14.dp)
     ) {
-        items(testMovies) {
-            MovieItem(movie = it)
+        items(movies) { movieItemUi ->
+            MovieItem(movie = movieItemUi, onClick = { onMovieClick(movieItemUi.id) })
         }
     }
 }
 
 @Composable
-fun MovieItem(movie: MovieItemUi) {
+fun MovieItem(movie: MovieItemUi, onClick: (id: Int) -> Unit) {
     MovieGuideTheme {
         // A surface container using the 'background' color from the theme
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .clip(RoundedCornerShape(8.dp))
                 .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(8.dp))
-                .clickable {  }
+                .clickable { onClick(movie.id) }
         ) {
             ImageBlock(movie = movie)
             Text(
                 text = movie.title,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            Text(
-                text = "${movie.duration} MIN",
-                style = MaterialTheme.typography.labelLarge,
-                fontSize = 8.sp,
-                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -118,16 +98,17 @@ fun MovieItem(movie: MovieItemUi) {
 
 @Composable
 private fun ImageBlock(movie: MovieItemUi) {
+    Log.d("TAG", "ImageBlock: $movie")
     MovieGuideTheme {
         // A surface container using the 'background' color from the theme
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 300.dp)
+                .height(250.dp)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            Image(
-                painter = painterResource(id = movie.poster),
+            AsyncImage(
+                model = movie.posterPath,
                 modifier = Modifier
                     .fillMaxWidth()
                     .graphicsLayer { alpha = 0.99f }
@@ -147,8 +128,7 @@ private fun ImageBlock(movie: MovieItemUi) {
             )
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .heightIn(min = 300.dp)
+                    .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 10.dp)
             ) {
                 Row(
@@ -157,7 +137,7 @@ private fun ImageBlock(movie: MovieItemUi) {
                         .weight(1f)
                 ) {
                     Text(
-                        text = "${movie.ageLimit}+",
+                        text = stringResource(id = R.string.age_limit, movie.ageLimit),
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary,
@@ -178,9 +158,7 @@ private fun ImageBlock(movie: MovieItemUi) {
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.tertiary
                 )
-
-
-                FilmRatingBlock(getTestMovies().first())
+                FilmRatingBlock(movie)
             }
         }
     }
@@ -251,5 +229,5 @@ fun MoviesListPreview() {
 @Preview(showBackground = true)
 @Composable
 fun MovieItemPreview() {
-    MovieItem(getTestMovies().first())
+    MovieItem(getTestMovies().first(), {})
 }
