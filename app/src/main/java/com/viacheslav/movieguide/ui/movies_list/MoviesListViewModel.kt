@@ -2,9 +2,11 @@ package com.viacheslav.movieguide.ui.movies_list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.viacheslav.movieguide.data.Result.Success
 import com.viacheslav.movieguide.domain.MoviesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,19 +48,16 @@ class MoviesListViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            val allGenres = repository.getGenres()
-            _movies.update {
-                repository.getPopularMovies()
-                    .map { moviesDto -> MovieItemUi.fromMovieDto(moviesDto, allGenres) }
-            }
-
-            /*repository.getGenresFlow().collect() {
-                when (it) {
-                    is ResponseObject.Success<GenresDto> -> Log.d(TAG, "Success: ${it.data.}")
-                    is ResponseObject.Failure -> Log.e(TAG, "Error: ${it.code}")
-                    is ResponseObject.Loading -> Log.d(TAG, "Loading: ")
+            val allGenresDeferred = async { repository.getGenres() }
+            val popularMoviesDeferred = async { repository.getPopularMovies() }
+            val allGenres = allGenresDeferred.await()
+            val popularMovies = popularMoviesDeferred.await()
+            if (allGenres is Success && popularMovies is Success) {
+                _movies.update {
+                    popularMovies.data.results
+                        .map { moviesDto -> MovieItemUi.fromMovieDto(moviesDto, allGenres.data) }
                 }
-            }*/
+            }
         }
     }
 }

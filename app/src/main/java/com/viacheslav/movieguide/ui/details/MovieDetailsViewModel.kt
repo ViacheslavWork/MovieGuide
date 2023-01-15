@@ -3,9 +3,11 @@ package com.viacheslav.movieguide.ui.details
 //import dagger.hilt.android.lifecycle.HiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.viacheslav.movieguide.data.Result
 import com.viacheslav.movieguide.domain.MoviesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,11 +29,17 @@ class MoviesDetailsViewModel @Inject constructor(private val repository: MoviesR
 
     fun getMovie(id: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            _movie.update {
-                DetailsUi.fromDto(
-                    movieDetailsDto = repository.getMovie(movieId = id),
-                    castDto = repository.getCast(movieId = id)
-                )
+            val movieDeferred = async { repository.getMovie(id) }
+            val castDeferred = async { repository.getCast(id) }
+            val movie = movieDeferred.await()
+            val cast = castDeferred.await()
+            if (movie is Result.Success && cast is Result.Success) {
+                _movie.update {
+                    DetailsUi.fromDto(
+                        movieDetailsDto = movie.data,
+                        castDto = cast.data
+                    )
+                }
             }
         }
     }

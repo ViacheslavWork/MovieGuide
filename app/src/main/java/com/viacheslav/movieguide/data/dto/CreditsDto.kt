@@ -2,7 +2,7 @@ package com.viacheslav.movieguide.data.dto
 
 import com.google.gson.annotations.SerializedName
 
-data class ResponseCredits(
+data class CreditsDto(
 
     @field:SerializedName("id")
     val id: Int,
