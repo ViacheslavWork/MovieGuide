@@ -2,7 +2,7 @@ package com.viacheslav.movieguide.ui.movies_list
 
 import com.viacheslav.movieguide.data.dto.GenreDto
 import com.viacheslav.movieguide.data.dto.MovieListItemDto
-import com.viacheslav.movieguide.data.retrofit.IMAGE_URL
+import com.viacheslav.movieguide.di.IMAGE_URL
 import com.viacheslav.movieguide.toLine
 import kotlin.math.roundToInt
 

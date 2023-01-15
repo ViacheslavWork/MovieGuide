@@ -30,7 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.viacheslav.movieguide.R
 import com.viacheslav.movieguide.ui.theme.MovieGuideTheme
@@ -58,7 +58,7 @@ fun DetailsScreen(
     onBackButtonPressed: () -> Unit = {}
 ) {
     Log.d("TAG", "movie id: $movieId")
-    val viewModel: MoviesDetailsViewModel = viewModel()
+    val viewModel: MoviesDetailsViewModel = hiltViewModel()
     viewModel.getMovie(movieId)
     val movie by viewModel.movie.collectAsState()
     movie?.let { movieDetails ->

@@ -27,7 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.viacheslav.movieguide.R
 import com.viacheslav.movieguide.ui.theme.MovieGuideTheme
@@ -39,7 +39,7 @@ import java.util.*
 
 @Composable
 fun MovieListScreen(onMovieClick: (id: Int) -> Unit = {}) {
-    val viewModel: MoviesListViewModel = viewModel()
+    val viewModel: MoviesListViewModel = hiltViewModel()
     val movies by viewModel.movies.collectAsState()
     MovieGuideTheme {
         // A surface container using the 'background' color from the theme
