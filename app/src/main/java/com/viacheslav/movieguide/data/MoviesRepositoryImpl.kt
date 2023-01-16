@@ -1,8 +1,11 @@
 package com.viacheslav.movieguide.data
 
-import com.viacheslav.movieguide.data.Result.*
+import com.viacheslav.movieguide.data.Result.Failure
+import com.viacheslav.movieguide.data.Result.Success
 import com.viacheslav.movieguide.data.dto.CastItemDto
 import com.viacheslav.movieguide.data.dto.GenreDto
+import com.viacheslav.movieguide.data.dto.ListDto
+import com.viacheslav.movieguide.data.dto.MovieListItemDto
 import com.viacheslav.movieguide.data.retrofit.MoviesGuideApiService
 import com.viacheslav.movieguide.domain.MoviesRepository
 import javax.inject.Inject
@@ -16,8 +19,8 @@ class MoviesRepositoryImpl @Inject constructor(
 ) :
     MoviesRepository {
 
-    override suspend fun getPopularMovies() =
-        networkRequester.makeRequest { api.getPopularMovies() }
+    override suspend fun getPopularMovies(page: Int) =
+        networkRequester.makeRequest { api.getPopularMovies(page) }
 
     override suspend fun getMovie(movieId: Int) =
         networkRequester.makeRequest { api.getMovie(movieId) }
@@ -27,7 +30,6 @@ class MoviesRepositoryImpl @Inject constructor(
             is Success -> Success(credits.data.cast)
             is Failure -> Failure(credits.code)
         }
-
 
     override suspend fun getGenres(): Result<List<GenreDto>> {
         val result = when (val genres = networkRequester.makeRequest { api.getGenres() }) {

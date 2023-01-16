@@ -1,11 +1,13 @@
 package com.viacheslav.movieguide.ui.movies_list
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.viacheslav.movieguide.R
+import com.viacheslav.movieguide.ui.isScrolledToTheEnd
 import com.viacheslav.movieguide.ui.theme.MovieGuideTheme
 import java.util.*
 
@@ -52,15 +55,25 @@ fun MovieListScreen(onMovieClick: (id: Int) -> Unit = {}) {
             Spacer(modifier = Modifier.height(44.dp))
             HeaderBlock()
             Spacer(modifier = Modifier.height(24.dp))
-            ListBlock(movies = movies, onMovieClick)
+            ListBlock(movies = movies, onMovieClick) { viewModel.getPopularMoviesNextPage() }
         }
     }
 }
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ListBlock(movies: List<MovieItemUi>, onMovieClick: (id: Int) -> Unit) {
+fun ListBlock(
+    movies: List<MovieItemUi>,
+    onMovieClick: (id: Int) -> Unit,
+    getNextPage: () -> Unit
+) {
+    val gridState = rememberLazyListState()
+    if (gridState.isScrolledToTheEnd()) {
+        getNextPage()
+    }
     LazyVerticalGrid(
+        state = gridState,
         cells = GridCells.Fixed(2),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -70,6 +83,7 @@ fun ListBlock(movies: List<MovieItemUi>, onMovieClick: (id: Int) -> Unit) {
             MovieItem(movie = movieItemUi, onClick = { onMovieClick(movieItemUi.id) })
         }
     }
+
 }
 
 @Composable

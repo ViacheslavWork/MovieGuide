@@ -1,4 +1,6 @@
-package com.viacheslav.movieguide
+package com.viacheslav.movieguide.ui
+
+import androidx.compose.foundation.lazy.LazyListState
 
 /**
  * Created by Viacheslav Avd on 12.01.2023
@@ -12,3 +14,5 @@ fun List<String>.toLine(): String {
     }
     return strBuilder.toString()
 }
+
+fun LazyListState.isScrolledToTheEnd() = layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 1

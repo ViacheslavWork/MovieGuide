@@ -2,11 +2,11 @@ package com.viacheslav.movieguide.ui.movies_list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.viacheslav.movieguide.core.CoDispatchers
 import com.viacheslav.movieguide.data.Result.Success
+import com.viacheslav.movieguide.data.dto.GenreDto
 import com.viacheslav.movieguide.domain.MoviesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +17,8 @@ import javax.inject.Inject
 /**
  * Created by Viacheslav Avd on 11.01.2023
  */
+
+const val MAX_PAGES = 1000
 fun getTestMovies(): List<MovieItemUi> {
     val movies = mutableListOf<MovieItemUi>()
     repeat(6) {
@@ -40,22 +42,45 @@ private const val TAG = "MoviesListViewModel"
 
 @HiltViewModel
 class MoviesListViewModel @Inject constructor(
-    private val repository: MoviesRepository
+    private val repository: MoviesRepository,
+    private val coDispatchers: CoDispatchers,
 ) : ViewModel() {
 
     private val _movies = MutableStateFlow<List<MovieItemUi>>(emptyList())
     val movies: StateFlow<List<MovieItemUi>> = _movies.asStateFlow()
 
+    private lateinit var allGenres: List<GenreDto>
+    private var page: Int = 0
+
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            val allGenresDeferred = async { repository.getGenres() }
-            val popularMoviesDeferred = async { repository.getPopularMovies() }
-            val allGenres = allGenresDeferred.await()
-            val popularMovies = popularMoviesDeferred.await()
-            if (allGenres is Success && popularMovies is Success) {
+        viewModelScope.launch(coDispatchers.io) {
+            val allGenresResult = repository.getGenres()
+            if (allGenresResult is Success)
+                allGenres = allGenresResult.data
+            else
+                return@launch
+            getPopularMoviesNextPage()
+        }
+    }
+
+    fun getPopularMoviesNextPage() {
+        viewModelScope.launch(coDispatchers.io) {
+            if (!::allGenres.isInitialized) return@launch
+            if (++page > MAX_PAGES) {
+                page = MAX_PAGES
+                return@launch
+            }
+            val popularMovies = repository.getPopularMovies(page = page)
+            if (popularMovies is Success) {
                 _movies.update {
-                    popularMovies.data.results
-                        .map { moviesDto -> MovieItemUi.fromMovieDto(moviesDto, allGenres.data) }
+                    it.toMutableList()
+                        .apply {
+                            addAll(popularMovies.data.results
+                                .map { moviesDto ->
+                                    MovieItemUi.fromMovieDto(moviesDto, allGenres)
+                                }
+                            )
+                        }.toList()
                 }
             }
         }
