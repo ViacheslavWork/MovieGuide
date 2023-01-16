@@ -1,6 +1,5 @@
 package com.viacheslav.movieguide.data
 
-import com.viacheslav.movieguide.core.CoDispatchers
 import retrofit2.HttpException
 import retrofit2.Response
 import javax.inject.Inject
@@ -8,7 +7,7 @@ import javax.inject.Inject
 /**
  * Created by Viacheslav Avd on 12.01.2023
  */
-class NetworkRequester @Inject constructor(private val coDispatchers: CoDispatchers) {
+class NetworkRequester @Inject constructor() {
     suspend fun <T> makeRequest(request: suspend () -> Response<T>): Result<T> {
         return try {
             val response = request.invoke()

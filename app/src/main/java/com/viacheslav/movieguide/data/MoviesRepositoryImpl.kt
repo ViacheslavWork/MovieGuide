@@ -4,8 +4,6 @@ import com.viacheslav.movieguide.data.Result.Failure
 import com.viacheslav.movieguide.data.Result.Success
 import com.viacheslav.movieguide.data.dto.CastItemDto
 import com.viacheslav.movieguide.data.dto.GenreDto
-import com.viacheslav.movieguide.data.dto.ListDto
-import com.viacheslav.movieguide.data.dto.MovieListItemDto
 import com.viacheslav.movieguide.data.retrofit.MoviesGuideApiService
 import com.viacheslav.movieguide.domain.MoviesRepository
 import javax.inject.Inject
@@ -15,12 +13,10 @@ import javax.inject.Inject
  */
 class MoviesRepositoryImpl @Inject constructor(
     private val api: MoviesGuideApiService,
-    private val networkRequester: NetworkRequester
-) :
-    MoviesRepository {
-
-    override suspend fun getPopularMovies(page: Int) =
-        networkRequester.makeRequest { api.getPopularMovies(page) }
+    private val networkRequester: NetworkRequester,
+    private val popularMoviesPagingSource: PopularMoviesPagingSource
+) : MoviesRepository {
+    override fun getPopularMoviesPagingSource() = popularMoviesPagingSource
 
     override suspend fun getMovie(movieId: Int) =
         networkRequester.makeRequest { api.getMovie(movieId) }

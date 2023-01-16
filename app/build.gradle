@@ -89,4 +89,7 @@ dependencies {
     kapt("com.google.dagger:hilt-android-compiler:2.44")
     implementation 'androidx.hilt:hilt-navigation-compose:1.1.0-alpha01'
 
+    //pagination
+    implementation "androidx.paging:paging-compose:1.0.0-alpha16"
+
 }
