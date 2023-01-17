@@ -4,6 +4,7 @@ import com.viacheslav.movieguide.data.Result.Failure
 import com.viacheslav.movieguide.data.Result.Success
 import com.viacheslav.movieguide.data.dto.CastItemDto
 import com.viacheslav.movieguide.data.dto.GenreDto
+import com.viacheslav.movieguide.data.dto.TrailerDto
 import com.viacheslav.movieguide.data.retrofit.MoviesGuideApiService
 import com.viacheslav.movieguide.domain.MoviesRepository
 import javax.inject.Inject
@@ -26,6 +27,13 @@ class MoviesRepositoryImpl @Inject constructor(
             is Success -> Success(credits.data.cast)
             is Failure -> Failure(credits.code)
         }
+
+    override suspend fun getTrailers(movieId: Int): Result<List<TrailerDto>> {
+        return when (val trailers = networkRequester.makeRequest { api.getVideos(movieId) }) {
+            is Success -> Success(trailers.data.results.filter { it.type == "Trailer" })
+            is Failure -> Failure(trailers.code)
+        }
+    }
 
     override suspend fun getGenres(): Result<List<GenreDto>> {
         val result = when (val genres = networkRequester.makeRequest { api.getGenres() }) {

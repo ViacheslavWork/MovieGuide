@@ -19,6 +19,9 @@ interface MoviesGuideApiService {
     @GET("movie/{movie_id}")
     suspend fun getMovie(@Path("movie_id") movie_id: Int): Response<MovieDetailsDto>
 
+    @GET("movie/{movie_id}/videos")
+    suspend fun getVideos(@Path("movie_id") movie_id: Int): Response<TrailersListDto>
+
     @GET("movie/{movie_id}/credits")
     suspend fun getCredits(@Path("movie_id") movie_id: Int): Response<CreditsDto>
 

@@ -2,4 +2,10 @@
 <resources>
 
     <style name="Theme.MovieGuide" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.MovieGuide.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+    <style name="Theme.MovieGuide.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="Theme.MovieGuide.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>

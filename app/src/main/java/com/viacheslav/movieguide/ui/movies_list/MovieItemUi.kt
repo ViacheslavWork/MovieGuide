@@ -2,7 +2,7 @@ package com.viacheslav.movieguide.ui.movies_list
 
 import com.viacheslav.movieguide.data.dto.GenreDto
 import com.viacheslav.movieguide.data.dto.MovieListItemDto
-import com.viacheslav.movieguide.di.IMAGE_URL
+import com.viacheslav.movieguide.di.MOVIES_IMAGE_URL
 import com.viacheslav.movieguide.ui.toLine
 import kotlin.math.roundToInt
 
@@ -35,7 +35,7 @@ data class MovieItemUi(
                     .map { it.name }
                     .toLine(),
                 isLiked = false,
-                posterPath = IMAGE_URL.plus(movieListItemDto.posterPath)
+                posterPath = MOVIES_IMAGE_URL.plus(movieListItemDto.posterPath)
             )
         }
     }

@@ -1,5 +1,6 @@
 package com.viacheslav.movieguide.ui.details
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.viacheslav.movieguide.core.CoDispatchers
@@ -18,6 +19,8 @@ import javax.inject.Inject
 /**
  * Created by Viacheslav Avd on 11.01.2023
  */
+private const val TAG = "MovieDetailsViewModel"
+
 @HiltViewModel
 class MoviesDetailsViewModel @Inject constructor(
     private val repository: MoviesRepository,
@@ -27,16 +30,28 @@ class MoviesDetailsViewModel @Inject constructor(
     val movie: StateFlow<DetailsUi?> = _movie.asStateFlow()
 
     fun getMovie(id: Int) {
+        if (movie.value != null) return
+        Log.d(TAG, "getMovie: $id")
         viewModelScope.launch(coDispatchers.io) {
             val movieDeferred = async { repository.getMovie(id) }
             val castDeferred = async { repository.getCast(id) }
+            val trailersDeferred = async { repository.getTrailers(id) }
+
             val movie = movieDeferred.await()
             val cast = castDeferred.await()
+            val trailer = trailersDeferred.await().let { result ->
+                if (result is Result.Success)
+                    result.data.maxByOrNull { it.official }
+                else
+                    null
+            }
+
             if (movie is Result.Success && cast is Result.Success) {
                 _movie.update {
                     DetailsUi.fromDto(
                         movieDetailsDto = movie.data,
-                        castDto = cast.data
+                        castDto = cast.data,
+                        trailer?.key
                     )
                 }
             }

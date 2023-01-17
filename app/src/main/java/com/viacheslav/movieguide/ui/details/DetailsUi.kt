@@ -2,7 +2,7 @@ package com.viacheslav.movieguide.ui.details
 
 import com.viacheslav.movieguide.data.dto.CastItemDto
 import com.viacheslav.movieguide.data.dto.MovieDetailsDto
-import com.viacheslav.movieguide.di.IMAGE_URL
+import com.viacheslav.movieguide.di.MOVIES_IMAGE_URL
 //import com.viacheslav.movieguide.data.retrofit.IMAGE_URL
 import com.viacheslav.movieguide.ui.toLine
 import kotlin.math.roundToInt
@@ -19,10 +19,15 @@ data class DetailsUi(
     val numberOfReviews: Int,
     val storyLine: String,
     val cast: List<ActorUi> = emptyList(),
-    val posterPath: String
+    val posterPath: String,
+    val trailerYouTubeId: String? = null
 ) {
     companion object {
-        fun fromDto(movieDetailsDto: MovieDetailsDto, castDto: List<CastItemDto>) =
+        fun fromDto(
+            movieDetailsDto: MovieDetailsDto,
+            castDto: List<CastItemDto>,
+            trailerId: String?
+        ) =
             DetailsUi(
                 id = movieDetailsDto.id,
                 ageLimit = if (movieDetailsDto.adult) 18 else 13,
@@ -31,8 +36,9 @@ data class DetailsUi(
                 numberOfStars = (movieDetailsDto.voteAverage / 2).roundToInt(),
                 numberOfReviews = movieDetailsDto.voteCount,
                 cast = castDto.map { ActorUi.fromCastItemDto(it) },
-                posterPath = IMAGE_URL.plus(movieDetailsDto.backdropPath),
+                posterPath = MOVIES_IMAGE_URL.plus(movieDetailsDto.backdropPath),
                 storyLine = movieDetailsDto.overview ?: "",
+                trailerYouTubeId = trailerId
             )
     }
 }
@@ -41,7 +47,7 @@ data class ActorUi(val name: String, val photoPath: String) {
     companion object {
         fun fromCastItemDto(dto: CastItemDto) = ActorUi(
             name = dto.name,
-            photoPath = IMAGE_URL.plus(dto.profilePath)
+            photoPath = MOVIES_IMAGE_URL.plus(dto.profilePath)
         )
     }
 }
