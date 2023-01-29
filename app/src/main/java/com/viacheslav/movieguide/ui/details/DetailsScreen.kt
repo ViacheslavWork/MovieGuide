@@ -1,6 +1,7 @@
 package com.viacheslav.movieguide.ui.details
 
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -16,9 +17,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,7 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.viacheslav.movieguide.R
+import com.viacheslav.movieguide.core.exhaustive
 import com.viacheslav.movieguide.di.MOVIES_IMAGE_URL
+import com.viacheslav.movieguide.ui.details.MovieDetailsState.*
 import com.viacheslav.movieguide.ui.theme.MovieGuideTheme
 import java.util.*
 
@@ -55,21 +58,35 @@ private data class DrawableStringPair(
     @DrawableRes val drawable: Int, @StringRes val text: Int
 )
 
+private const val TAG = "DetailsScreen"
+
 @Composable
 fun DetailsScreen(
     movieId: Int,
     onBackButtonPressed: () -> Unit = {},
     onPlayButtonPressed: (videoId: String) -> Unit = {},
+    viewModel: MoviesDetailsViewModel = hiltViewModel()
 ) {
-    Log.d("TAG", "movie id: $movieId")
-    val viewModel: MoviesDetailsViewModel = hiltViewModel()
-    viewModel.getMovie(movieId)
-    val movie by viewModel.movie.collectAsState()
-    movie?.let { movieDetails ->
-        MovieGuideTheme {
-            // A surface container using the 'background' color from the theme
-            Screen(movieDetails, onBackButtonPressed, onPlayButtonPressed)
+    Log.d(TAG, "DetailsScreen movie id: $movieId")
+    var isFirstRun by rememberSaveable { mutableStateOf(true) }
+    if (isFirstRun.also { isFirstRun = false }) {
+        viewModel.getMovie(movieId)
+    }
+    val movieDetailsState by viewModel.movieDetailsState.collectAsState()
+    when (movieDetailsState) {
+        is MovieLoaded -> {
+            Screen(
+                (movieDetailsState as MovieLoaded).movieDetailsUi,
+                onBackButtonPressed,
+                onPlayButtonPressed
+            )
         }
+        is FailedToLoad -> Toast.makeText(
+            LocalContext.current,
+            "Something went wrong",
+            Toast.LENGTH_SHORT
+        ).show()
+        is Initial -> Unit
     }
 }
 
@@ -79,69 +96,68 @@ private fun Screen(
     onBackButtonPressed: () -> Unit,
     onPlayButtonPressed: (youTubeVideoId: String) -> Unit,
 ) {
-    Log.d("DetailsScreen", "Screen: ${movieDetails.trailerYouTubeId}")
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        AsyncImage(
-            model = movieDetails.posterPath,
+    MovieGuideTheme {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .graphicsLayer { alpha = 0.99f }
-                .drawWithContent {
-                    val colors = listOf(
-                        Color.Black,
-                        Color.Transparent
-                    )
-                    drawContent()
-                    drawRect(
-                        brush = Brush.verticalGradient(colors),
-                        blendMode = BlendMode.DstIn
-                    )
-                },
-            contentDescription = null,
-            contentScale = ContentScale.FillWidth,
-        )
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Spacer(modifier = Modifier.height(59.dp))
-            BackButton(onBackButtonPressed)
-            Spacer(modifier = Modifier.height(40.dp))
-            PlayButtonBlock(isShow = movieDetails.trailerYouTubeId != null, onPlayButtonPressed = {
-                onPlayButtonPressed(movieDetails.trailerYouTubeId!!)
-            })
-            Spacer(modifier = Modifier.height(40.dp))
-            Text(
-                text = stringResource(id = R.string.age_limit, movieDetails.ageLimit),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            AsyncImage(
+                model = movieDetails.picturePath,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = 0.99f }
+                    .drawWithContent {
+                        val colors = listOf(
+                            Color.Black, Color.Transparent
+                        )
+                        drawContent()
+                        drawRect(
+                            brush = Brush.verticalGradient(colors),
+                            blendMode = BlendMode.DstIn
+                        )
+                    },
+                contentDescription = null,
+                contentScale = ContentScale.FillWidth,
             )
-            Text(
-                text = movieDetails.title,
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = movieDetails.genres,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.tertiary
-            )
-            FilmRatingBlock(movieDetails)
-            StoryLineBlock(movieDetails.storyLine)
-            CastBlock(movieDetails.cast)
-            Spacer(modifier = Modifier.height(16.dp))
-        }
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Spacer(modifier = Modifier.height(59.dp))
+                BackButton(onBackButtonPressed)
+                Spacer(modifier = Modifier.height(40.dp))
+                PlayButtonBlock(
+                    isShow = movieDetails.trailerYouTubeId != null,
+                    onPlayButtonPressed = {
+                        onPlayButtonPressed(movieDetails.trailerYouTubeId!!)
+                    })
+                Spacer(modifier = Modifier.height(40.dp))
+                Text(
+                    text = stringResource(id = R.string.age_limit, movieDetails.ageLimit),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = movieDetails.title,
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = movieDetails.genres,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+                FilmRatingBlock(movieDetails)
+                StoryLineBlock(movieDetails.storyLine)
+                CastBlock(movieDetails.cast)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
+        }
     }
 }
 
 @Composable
-private fun PlayButtonBlock(
-    isShow: Boolean,
-    onPlayButtonPressed: () -> Unit
-) {
+private fun PlayButtonBlock(isShow: Boolean, onPlayButtonPressed: () -> Unit) {
     val sizeOfButton = 72.dp
     if (isShow) {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -158,8 +174,7 @@ private fun PlayButtonBlock(
                 )
             }
         }
-    } else
-        Spacer(modifier = Modifier.height(sizeOfButton))
+    } else Spacer(modifier = Modifier.height(sizeOfButton))
 }
 
 @Composable
@@ -187,16 +202,14 @@ fun BackButton(onBackButtonPressed: () -> Unit = {}) {
 @Composable
 private fun FilmRatingBlock(movie: DetailsUi) {
     Row(
-        modifier = Modifier.padding(top = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically
     ) {
         repeat(5) {
             Icon(
                 modifier = Modifier.padding(end = 4.dp),
                 painter = painterResource(id = R.drawable.ic_star),
                 contentDescription = null,
-                tint =
-                if (it <= movie.numberOfStars - 1) MaterialTheme.colorScheme.tertiary
+                tint = if (it <= movie.numberOfStars - 1) MaterialTheme.colorScheme.tertiary
                 else MaterialTheme.colorScheme.onBackground
             )
         }
@@ -243,11 +256,7 @@ fun CastBlock(cast: List<ActorUi>) {
 }
 
 @Composable
-fun ActorCard(
-    photoPath: String,
-    name: String,
-    modifier: Modifier = Modifier
-) {
+fun ActorCard(photoPath: String, name: String, modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.width(width = 80.dp),
@@ -268,14 +277,11 @@ fun ActorCard(
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun ActorPreview() {
     ActorCard(
-        photoPath = "/rugyJdeoJm7cSJL1q4jBpTNbxyU.jpg",
-        name = "Actor",
-        modifier = Modifier
+        photoPath = "/rugyJdeoJm7cSJL1q4jBpTNbxyU.jpg", name = "Actor", modifier = Modifier
     )
 }
 
@@ -297,7 +303,7 @@ fun RatingBlockPreview() {
             numberOfStars = 4,
             numberOfReviews = 100500,
             cast = emptyList(),
-            posterPath = MOVIES_IMAGE_URL.plus("/rugyJdeoJm7cSJL1q4jBpTNbxyU.jpg"),
+            picturePath = MOVIES_IMAGE_URL.plus("/rugyJdeoJm7cSJL1q4jBpTNbxyU.jpg"),
             storyLine = "The Red Ribbon Army, an evil organization that was once destroyed by Goku in the past, has been reformed by a group of people who have created new and mightier Androids, Gamma 1 and Gamma 2, and seek vengeance against Goku and his family.",
             trailerYouTubeId = null
         )
@@ -308,19 +314,17 @@ fun RatingBlockPreview() {
 @Composable
 fun ScreenPreview() {
     MovieGuideTheme {
-        Screen(
-            DetailsUi(
-                id = 1,
-                ageLimit = 13,
-                title = "Avengers: End Game",
-                genres = "Action, Adventure, Fantasy",
-                numberOfStars = 4,
-                numberOfReviews = 100500,
-                cast = emptyList(),
-                posterPath = MOVIES_IMAGE_URL.plus("/rugyJdeoJm7cSJL1q4jBpTNbxyU.jpg"),
-                storyLine = "The Red Ribbon Army, an evil organization that was once destroyed by Goku in the past, has been reformed by a group of people who have created new and mightier Androids, Gamma 1 and Gamma 2, and seek vengeance against Goku and his family.",
-                trailerYouTubeId = "youtube_trailer_id"
-            ), {}, {}
-        )
+        Screen(DetailsUi(
+            id = 1,
+            ageLimit = 13,
+            title = "Avengers: End Game",
+            genres = "Action, Adventure, Fantasy",
+            numberOfStars = 4,
+            numberOfReviews = 100500,
+            cast = emptyList(),
+            picturePath = MOVIES_IMAGE_URL.plus("/rugyJdeoJm7cSJL1q4jBpTNbxyU.jpg"),
+            storyLine = "The Red Ribbon Army, an evil organization that was once destroyed by Goku in the past, has been reformed by a group of people who have created new and mightier Androids, Gamma 1 and Gamma 2, and seek vengeance against Goku and his family.",
+            trailerYouTubeId = "youtube_trailer_id"
+        ), {}, {})
     }
 }

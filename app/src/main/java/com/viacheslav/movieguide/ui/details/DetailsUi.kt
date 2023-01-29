@@ -19,7 +19,7 @@ data class DetailsUi(
     val numberOfReviews: Int,
     val storyLine: String,
     val cast: List<ActorUi> = emptyList(),
-    val posterPath: String,
+    val picturePath: String,
     val trailerYouTubeId: String? = null
 ) {
     companion object {
@@ -36,7 +36,7 @@ data class DetailsUi(
                 numberOfStars = (movieDetailsDto.voteAverage / 2).roundToInt(),
                 numberOfReviews = movieDetailsDto.voteCount,
                 cast = castDto.map { ActorUi.fromCastItemDto(it) },
-                posterPath = MOVIES_IMAGE_URL.plus(movieDetailsDto.backdropPath),
+                picturePath = MOVIES_IMAGE_URL.plus(movieDetailsDto.backdropPath),
                 storyLine = movieDetailsDto.overview ?: "",
                 trailerYouTubeId = trailerId
             )

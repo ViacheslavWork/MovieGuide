@@ -1,6 +1,7 @@
 package com.viacheslav.movieguide.ui
 
 import android.content.Intent
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -35,8 +36,7 @@ fun MovieGuideApp() {
             val movieId = navBackStackEntry.arguments?.getInt(ARG_MOVIE_ID)
             val context = LocalContext.current
             movieId?.let { id ->
-                DetailsScreen(
-                    movieId = id,
+                DetailsScreen(movieId = id,
                     onBackButtonPressed = {
                         navController.popBackStack(MovieGuideDestination.List.route, false)
                     },
@@ -44,8 +44,7 @@ fun MovieGuideApp() {
                         val intent = Intent(context, PlayerActivity::class.java)
                         intent.putExtra(PlayerActivity.ARG_VIDEO_ID, it)
                         context.startActivity(intent)
-                    }
-                )
+                    })
             }
         }
     }
